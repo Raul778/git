@@ -1305,10 +1305,35 @@ int match_pathname(const char *pathname, int pathlen,
 
 static int path_matches_dir_pattern(const char *pathname,
 				    int pathlen,
+				    struct strbuf **path_parent,
 				    int *dtype,
 				    struct path_pattern *pattern,
 				    struct index_state *istate)
 {
+	if (!*path_parent) {
+		char *slash;
+		CALLOC_ARRAY(*path_parent, 1);
+		strbuf_add(*path_parent, pathname, pathlen);
+		slash = find_last_dir_sep((*path_parent)->buf);
+
+		if (slash)
+			strbuf_setlen(*path_parent, slash - (*path_parent)->buf);
+		else
+			strbuf_setlen(*path_parent, 0);
+	}
+
+	/*
+	 * If the parent directory matches the pattern, then we do not
+	 * need to check for dtype.
+	 */
+	if ((*path_parent)->len &&
+	    match_pathname((*path_parent)->buf, (*path_parent)->len,
+			   pattern->base,
+			   pattern->baselen ? pattern->baselen - 1 : 0,
+			   pattern->pattern, pattern->nowildcardlen,
+			   pattern->patternlen, pattern->flags))
+		return 1;
+
 	*dtype = resolve_dtype(*dtype, istate, pathname, pathlen);
 	if (*dtype != DT_DIR)
 		return 0;
@@ -1331,6 +1356,7 @@ static struct path_pattern *last_matching_pattern_from_list(const char *pathname
 {
 	struct path_pattern *res = NULL; /* undecided */
 	int i;
+	struct strbuf *path_parent = NULL;
 
 	if (!pl->nr)
 		return NULL;	/* undefined */
@@ -1340,8 +1366,8 @@ static struct path_pattern *last_matching_pattern_from_list(const char *pathname
 		const char *exclude = pattern->pattern;
 		int prefix = pattern->nowildcardlen;
 
-		if ((pattern->flags & PATTERN_FLAG_MUSTBEDIR) &&
-		    !path_matches_dir_pattern(pathname, pathlen,
+		if (pattern->flags & PATTERN_FLAG_MUSTBEDIR &&
+		    !path_matches_dir_pattern(pathname, pathlen, &path_parent,
 					      dtype, pattern, istate))
 			continue;
 
@@ -1367,6 +1393,12 @@ static struct path_pattern *last_matching_pattern_from_list(const char *pathname
 			break;
 		}
 	}
+
+	if (path_parent) {
+		strbuf_release(path_parent);
+		free(path_parent);
+	}
+
 	return res;
 }
 
