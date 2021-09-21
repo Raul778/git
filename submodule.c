@@ -92,8 +92,14 @@ int is_staging_gitmodules_ok(struct index_state *istate)
 static int for_each_remote_ref_submodule(const char *submodule,
 					 each_ref_fn fn, void *cb_data)
 {
-	return refs_for_each_remote_ref(get_submodule_ref_store(submodule),
-					fn, cb_data);
+	struct repository subrepo;
+	int ret;
+
+	if (repo_submodule_init(&subrepo, the_repository, submodule, null_oid()))
+		return 0;
+	ret = refs_for_each_remote_ref(&subrepo, fn, cb_data);
+	repo_clear(&subrepo);
+	return ret;
 }
 
 /*
