@@ -320,7 +320,7 @@ int refs_head_ref(struct repository *repo,
 		  each_ref_fn fn, void *cb_data);
 int refs_for_each_ref(struct repository *repo,
 		      each_ref_fn fn, void *cb_data);
-int refs_for_each_ref_in(struct ref_store *refs, const char *prefix,
+int refs_for_each_ref_in(struct repository *repo, const char *prefix,
 			 each_ref_fn fn, void *cb_data);
 int refs_for_each_tag_ref(struct repository *repo,
 			  each_ref_fn fn, void *cb_data);

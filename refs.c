@@ -410,7 +410,7 @@ void warn_dangling_symrefs(FILE *fp, const char *msg_fmt, const struct string_li
 
 int refs_for_each_tag_ref(struct repository *repo, each_ref_fn fn, void *cb_data)
 {
-	return refs_for_each_ref_in(get_main_ref_store(repo), "refs/tags/", fn, cb_data);
+	return refs_for_each_ref_in(repo, "refs/tags/", fn, cb_data);
 }
 
 int for_each_tag_ref(each_ref_fn fn, void *cb_data)
@@ -420,7 +420,7 @@ int for_each_tag_ref(each_ref_fn fn, void *cb_data)
 
 int refs_for_each_branch_ref(struct repository *repo, each_ref_fn fn, void *cb_data)
 {
-	return refs_for_each_ref_in(get_main_ref_store(repo), "refs/heads/", fn, cb_data);
+	return refs_for_each_ref_in(repo, "refs/heads/", fn, cb_data);
 }
 
 int for_each_branch_ref(each_ref_fn fn, void *cb_data)
@@ -430,7 +430,7 @@ int for_each_branch_ref(each_ref_fn fn, void *cb_data)
 
 int refs_for_each_remote_ref(struct repository *repo, each_ref_fn fn, void *cb_data)
 {
-	return refs_for_each_ref_in(get_main_ref_store(repo), "refs/remotes/", fn, cb_data);
+	return refs_for_each_ref_in(repo, "refs/remotes/", fn, cb_data);
 }
 
 int for_each_remote_ref(each_ref_fn fn, void *cb_data)
@@ -1508,15 +1508,15 @@ int for_each_ref(each_ref_fn fn, void *cb_data)
 	return refs_for_each_ref(the_repository, fn, cb_data);
 }
 
-int refs_for_each_ref_in(struct ref_store *refs, const char *prefix,
+int refs_for_each_ref_in(struct repository *repo, const char *prefix,
 			 each_ref_fn fn, void *cb_data)
 {
-	return do_for_each_ref(refs, prefix, fn, strlen(prefix), the_repository, 0, cb_data);
+	return do_for_each_ref(get_main_ref_store(repo), prefix, fn, strlen(prefix), repo, 0, cb_data);
 }
 
 int for_each_ref_in(const char *prefix, each_ref_fn fn, void *cb_data)
 {
-	return refs_for_each_ref_in(get_main_ref_store(the_repository), prefix, fn, cb_data);
+	return refs_for_each_ref_in(the_repository, prefix, fn, cb_data);
 }
 
 int for_each_fullref_in(const char *prefix, each_ref_fn fn, void *cb_data, unsigned int broken)
