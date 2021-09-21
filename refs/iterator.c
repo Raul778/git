@@ -10,7 +10,23 @@
 
 int ref_iterator_advance(struct ref_iterator *ref_iterator)
 {
-	return ref_iterator->vtable->advance(ref_iterator);
+	int ok;
+
+	if (ref_iterator->repo && ref_iterator->repo != the_repository)
+		/*
+		 * NEEDSWORK: make ref_resolves_to_object() support
+		 * arbitrary repositories
+		 */
+		BUG("ref_iterator->repo must be NULL or the_repository");
+	while ((ok = ref_iterator->vtable->advance(ref_iterator)) == ITER_OK) {
+		if (ref_iterator->repo &&
+		    !ref_resolves_to_object(ref_iterator->refname,
+					    ref_iterator->oid,
+					    ref_iterator->flags))
+			continue;
+		return ITER_OK;
+	}
+	return ok;
 }
 
 int ref_iterator_peel(struct ref_iterator *ref_iterator,

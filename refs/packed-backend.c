@@ -863,11 +863,6 @@ static int packed_ref_iterator_advance(struct ref_iterator *ref_iterator)
 		    ref_type(iter->base.refname) != REF_TYPE_PER_WORKTREE)
 			continue;
 
-		if (!(iter->flags & DO_FOR_EACH_INCLUDE_BROKEN) &&
-		    !ref_resolves_to_object(iter->base.refname, &iter->oid,
-					    iter->flags))
-			continue;
-
 		return ITER_OK;
 	}
 
@@ -922,8 +917,6 @@ static struct ref_iterator *packed_ref_iterator_begin(
 	struct ref_iterator *ref_iterator;
 	unsigned int required_flags = REF_STORE_READ;
 
-	if (!(flags & DO_FOR_EACH_INCLUDE_BROKEN))
-		required_flags |= REF_STORE_ODB;
 	refs = packed_downcast(ref_store, required_flags, "ref_iterator_begin");
 
 	/*
@@ -1136,8 +1129,7 @@ static int write_with_updates(struct packed_ref_store *refs,
 	 * list of refs is exhausted, set iter to NULL. When the list
 	 * of updates is exhausted, leave i set to updates->nr.
 	 */
-	iter = packed_ref_iterator_begin(&refs->base, "",
-					 DO_FOR_EACH_INCLUDE_BROKEN);
+	iter = refs_ref_iterator_begin(&refs->base, "", 0, NULL, 0);
 	if ((ok = ref_iterator_advance(iter)) != ITER_OK)
 		iter = NULL;
 

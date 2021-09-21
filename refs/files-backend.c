@@ -744,12 +744,6 @@ static int files_ref_iterator_advance(struct ref_iterator *ref_iterator)
 		    ref_type(iter->iter0->refname) != REF_TYPE_PER_WORKTREE)
 			continue;
 
-		if (!(iter->flags & DO_FOR_EACH_INCLUDE_BROKEN) &&
-		    !ref_resolves_to_object(iter->iter0->refname,
-					    iter->iter0->oid,
-					    iter->iter0->flags))
-			continue;
-
 		iter->base.refname = iter->iter0->refname;
 		iter->base.oid = iter->iter0->oid;
 		iter->base.flags = iter->iter0->flags;
@@ -801,9 +795,6 @@ static struct ref_iterator *files_ref_iterator_begin(
 	struct ref_iterator *ref_iterator;
 	unsigned int required_flags = REF_STORE_READ;
 
-	if (!(flags & DO_FOR_EACH_INCLUDE_BROKEN))
-		required_flags |= REF_STORE_ODB;
-
 	refs = files_downcast(ref_store, required_flags, "ref_iterator_begin");
 
 	/*
@@ -836,10 +827,13 @@ static struct ref_iterator *files_ref_iterator_begin(
 	 * references, and (if needed) do our own check for broken
 	 * ones in files_ref_iterator_advance(), after we have merged
 	 * the packed and loose references.
+	 *
+	 * Do this by not supplying any repo, regardless of whether a repo was
+	 * supplied to files_ref_iterator_begin().
 	 */
 	packed_iter = refs_ref_iterator_begin(
 			refs->packed_ref_store, prefix, 0,
-			DO_FOR_EACH_INCLUDE_BROKEN);
+			NULL, 0);
 
 	overlay_iter = overlay_ref_iterator_begin(loose_iter, packed_iter);
 
