@@ -323,11 +323,26 @@ struct ref_iterator {
  */
 int ref_iterator_advance(struct ref_iterator *ref_iterator);
 
+enum ref_iterator_peel_result {
+	REF_ITERATOR_PEEL_SUCCESS,
+	REF_ITERATOR_PEEL_FAILURE,
+	REF_ITERATOR_PEEL_INCONCLUSIVE
+};
+
 /*
- * If possible, peel the reference currently being viewed by the
- * iterator. Return 0 on success.
+ * Peel the reference currently being viewed by the iterator without
+ * using any information from any object store.
+ */
+enum ref_iterator_peel_result ref_iterator_peel_raw(
+		struct ref_iterator *ref_iterator,
+		struct object_id *peeled);
+
+/*
+ * Peel the reference currently being viewed by the iterator, using the object
+ * store if the ref store has insufficient information. Returns 0 upon success.
  */
 int ref_iterator_peel(struct ref_iterator *ref_iterator,
+		      struct repository *repo,
 		      struct object_id *peeled);
 
 /*
@@ -461,10 +476,12 @@ void base_ref_iterator_free(struct ref_iterator *iter);
 typedef int ref_iterator_advance_fn(struct ref_iterator *ref_iterator);
 
 /*
- * Peels the current ref, returning 0 for success or -1 for failure.
+ * Peels the current ref using only information from the ref store. If there is
+ * not enough information, returns REF_ITERATOR_PEEL_INCONCLUSIVE.
  */
-typedef int ref_iterator_peel_fn(struct ref_iterator *ref_iterator,
-				 struct object_id *peeled);
+typedef enum ref_iterator_peel_result ref_iterator_peel_fn(
+		struct ref_iterator *ref_iterator,
+		struct object_id *peeled);
 
 /*
  * Implementations of this function should free any resources specific

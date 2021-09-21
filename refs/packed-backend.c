@@ -872,19 +872,21 @@ static int packed_ref_iterator_advance(struct ref_iterator *ref_iterator)
 	return ok;
 }
 
-static int packed_ref_iterator_peel(struct ref_iterator *ref_iterator,
-				   struct object_id *peeled)
+static enum ref_iterator_peel_result packed_ref_iterator_peel(
+		struct ref_iterator *ref_iterator,
+		struct object_id *peeled)
 {
 	struct packed_ref_iterator *iter =
 		(struct packed_ref_iterator *)ref_iterator;
 
 	if ((iter->base.flags & REF_KNOWS_PEELED)) {
 		oidcpy(peeled, &iter->peeled);
-		return is_null_oid(&iter->peeled) ? -1 : 0;
+		return is_null_oid(&iter->peeled) ?
+			REF_ITERATOR_PEEL_FAILURE : REF_ITERATOR_PEEL_SUCCESS;
 	} else if ((iter->base.flags & (REF_ISBROKEN | REF_ISSYMREF))) {
-		return -1;
+		return REF_ITERATOR_PEEL_FAILURE;
 	} else {
-		return peel_object(&iter->oid, peeled) ? -1 : 0;
+		return REF_ITERATOR_PEEL_INCONCLUSIVE;
 	}
 }
 
@@ -1210,7 +1212,7 @@ static int write_with_updates(struct packed_ref_store *refs,
 			/* Pass the old reference through. */
 
 			struct object_id peeled;
-			int peel_error = ref_iterator_peel(iter, &peeled);
+			int peel_error = ref_iterator_peel(iter, the_repository, &peeled);
 
 			if (write_packed_entry(out, iter->refname,
 					       iter->oid,

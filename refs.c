@@ -2012,7 +2012,7 @@ int peel_iterated_oid(const struct object_id *base, struct object_id *peeled)
 	if (current_ref_iter &&
 	    (current_ref_iter->oid == base ||
 	     oideq(current_ref_iter->oid, base)))
-		return ref_iterator_peel(current_ref_iter, peeled);
+		return ref_iterator_peel(current_ref_iter, the_repository, peeled);
 
 	return peel_object(base, peeled) ? -1 : 0;
 }
