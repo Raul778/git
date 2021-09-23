@@ -1,4 +1,4 @@
-name: CI/PR
+Use Control + Space to trigger autocomplete in most situationsname: CI/PR
 
 on: [push, pull_request]
 
