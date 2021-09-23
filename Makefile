@@ -1301,7 +1301,7 @@ GENERATE_COMPILATION_DATABASE = no
 endif
 
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
-compdb_check = $(shell $(CC) $(ALL_CFLAGS) \
+compdb_check = $(shell $(CC) \
 	-c -MJ /dev/null \
 	-x c /dev/null -o /dev/null 2>&1; \
 	echo $$?)
