@@ -259,6 +259,11 @@ ifeq ($(uname_S),FreeBSD)
 	FILENO_IS_A_MACRO = UnfortunatelyYes
 endif
 ifeq ($(uname_S),OpenBSD)
+	NO_UNCOMPRESS2 = YesPlease
+	# Versions < 7.0 need compatibility layer
+	ifeq ($(shell expr "$(uname_R)" : "[1-6]\."),2)
+		NO_UNCOMPRESS2 = UnfortunatelyYes
+	endif
 	NO_STRCASESTR = YesPlease
 	NO_MEMMEM = YesPlease
 	USE_ST_TIMESPEC = YesPlease
